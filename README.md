@@ -1,16 +1,7 @@
 # LTC E-Commerce Website — Database Project (COMP333)
 
-**COMP333 Database Systems — Phase 1 & 2**  
 E-commerce web application for **Light for Technology & Computer (LTC)**, a computer and networking store in Ramallah. Customers can browse products, use a shopping cart, and place orders; admins and employees manage products, inventory, orders, and users. Backend: **Flask (Python)**; database: **MySQL**. Phase 1 and Phase 2 reports describe scope, entities, relations, and queries (CREATE/READ/UPDATE/DELETE).
 
----
-
-## Repository name suggestion for GitHub
-
-- **Recommended:** `COMP333-LTC-Ecommerce-Database`
-- Alternatives: `LTC-Ecommerce-Flask-MySQL` | `Database-Project-LTC-Store`
-
----
 
 ## Overview
 
