@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Employees - LTC Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1>Employees</h1>
+      <p class="muted">View and manage all employee records</p>
+    </div>
+  </div>
+
+  <!-- Add New Employee Form -->
+  <div class="chart-card" style="margin-bottom: 24px;">
+    <h2>Add New Employee</h2>
+    <form method="POST" class="add-employee-form" style="max-width: 600px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <div>
+          <label for="first_name" style="display: block; margin-bottom: 4px; font-weight: 600;">First Name *</label>
+          <input type="text" id="first_name" name="first_name" required placeholder="John" style="width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 4px;">
+        </div>
+        <div>
+          <label for="last_name" style="display: block; margin-bottom: 4px; font-weight: 600;">Last Name *</label>
+          <input type="text" id="last_name" name="last_name" required placeholder="Doe" style="width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 4px;">
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <div>
+          <label for="email" style="display: block; margin-bottom: 4px; font-weight: 600;">Email *</label>
+          <input type="email" id="email" name="email" required placeholder="john.doe@ltc.com" style="width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 4px;">
+        </div>
+        <div>
+          <label for="password" style="display: block; margin-bottom: 4px; font-weight: 600;">Password *</label>
+          <input type="password" id="password" name="password" required placeholder="Enter password" style="width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 4px;">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">+ Add Employee</button>
+    </form>
+  </div>
+
+  <!-- Employees List -->
+  <div class="chart-card">
+    <h2>All Employees</h2>
+    {% if employees %}
+    <div class="top-list">
+      {% for employee in employees %}
+      <div class="list-item">
+        <div class="list-info">
+          <p class="list-title">{{ employee.first_name }} {{ employee.last_name }}</p>
+          <p class="list-meta">{{ employee.email }}</p>
+        </div>
+        <div style="text-align:right;min-width:120px;">
+          <p class="list-meta" style="margin:0;font-size:12px;color:var(--muted);">User ID: {{ employee.user_id }}</p>
+          <p class="list-value" style="font-size:14px;color:var(--accent);">Employee</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">No employees found. Add your first employee above.</p>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  .page-header {
+    margin-bottom: 32px;
+  }
+
+  .page-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .page-header .muted {
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid var(--line);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .chart-card h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+
+  .top-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f8f9fc;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
+  }
+
+  .list-item:hover {
+    background: #f0f2f7;
+    transform: translateX(2px);
+  }
+
+  .list-info {
+    flex: 1;
+  }
+
+  .list-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 4px 0;
+  }
+
+  .list-meta {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .list-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .muted {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-dark);
+  }
+</style>
+{% endblock %}

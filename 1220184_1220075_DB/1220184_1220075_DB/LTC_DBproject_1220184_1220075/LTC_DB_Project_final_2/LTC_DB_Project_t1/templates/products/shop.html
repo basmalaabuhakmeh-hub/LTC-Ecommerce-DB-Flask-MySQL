@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Shop Products | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <h2>Shop Products</h2>
+        <p>Browse our catalog and find the perfect product for you</p>
+      </div>
+    </div>
+
+    <!-- Enhanced Search Bar -->
+    <form method="GET" action="{{ url_for('product.products_shop') }}" class="search-bar" style="margin-bottom: 32px;">
+      <input type="text" id="q" name="q" placeholder="Search products by name, category..."
+             value="{{ q or '' }}">
+      <button type="submit" class="btn btn-primary">Search</button>
+      {% if q %}
+      <a href="{{ url_for('product.products_shop') }}" class="btn btn-ghost">Clear</a>
+      {% endif %}
+    </form>
+
+    {% if products %}
+    <!-- Products Grid -->
+    <div class="product-grid">
+      {% for p in products %}
+      <div class="product-card">
+        <div class="product-card-image">
+          {% if p.primary_image %}
+          <img src="{{ p.primary_image }}" alt="{{ p.product_name }}" class="product-card-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <span class="product-card-initial" style="display:none;">{{ p.product_name[0] }}</span>
+          {% else %}
+          <span class="product-card-initial">{{ p.product_name[0] }}</span>
+          {% endif %}
+        </div>
+        <div class="product-card-body">
+          <div class="product-card-category">{{ p.category_name or 'Uncategorized' }}</div>
+          {% if p.warranty_months and p.warranty_months > 0 %}
+          <div class="product-card-warranty" style="margin-bottom:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="vertical-align:middle;margin-right:6px;">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span>{{ p.warranty_months }} month{{ 's' if p.warranty_months > 1 else '' }}{% if p.warranty_provider %} — {{ p.warranty_provider }}{% endif %}</span>
+          </div>
+          {% endif %}
+          <div class="product-card-title">{{ p.product_name }}</div>
+          <div class="product-card-desc">{{ p.product_description or 'No description available' }}</div>
+          <div class="product-card-footer">
+            <div class="product-card-price">{{ "%.2f"|format(p.price) }} ILS</div>
+            <button class="btn btn-primary btn-small btn-add-to-cart" data-product-id="{{ p.product_id }}">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Results Count -->
+    <div style="margin-top: 32px; text-align: center; color: var(--muted); font-size: 14px;">
+      Showing <strong>{{ products|length }}</strong> product{{ 's' if products|length != 1 else '' }}
+      {% if q %} for "<strong>{{ q }}</strong>"{% endif %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">?</div>
+      {% if q %}
+      <h3>No products found</h3>
+      <p>No products matching "{{ q }}". Try a different search term or browse all products.</p>
+      {% else %}
+      <h3>No products available</h3>
+      <p>Check back soon for new arrivals!</p>
+      {% endif %}
+      {% if q %}
+      <a href="{{ url_for('product.products_shop') }}" class="btn btn-primary" style="margin-top: 20px;">View All Products</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

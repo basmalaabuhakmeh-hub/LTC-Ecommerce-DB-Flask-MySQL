@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block title %}Edit Sale | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="section sale-form-section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <h2>Edit Sale: {{ sale.get('sale_name', 'Sale') }}</h2>
+        <p>Update sale details and product assignments</p>
+      </div>
+      <a href="{{ url_for('sale.view_sale', sale_id=sale.sale_id) }}" class="btn btn-ghost">Back to Sale</a>
+    </div>
+
+    <div class="form-container">
+      <form method="POST" action="{{ url_for('sale.edit_sale', sale_id=sale.sale_id) }}" class="sale-form">
+        <div class="form-group">
+          <label for="sale_name">Sale Name *</label>
+          <input type="text" id="sale_name" name="sale_name" required 
+                 value="{{ sale.get('sale_name', 'Sale') }}">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="sale_type">Discount Type *</label>
+            <select id="sale_type" name="sale_type" required onchange="updateDiscountLabel()">
+              <option value="percentage" {{ 'selected' if sale.get('sale_type', 'percentage') == 'percentage' else '' }}>Percentage (%)</option>
+              <option value="fixed" {{ 'selected' if sale.get('sale_type', 'percentage') == 'fixed' else '' }}>Fixed Amount (ILS)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="discount_value" id="discount_label">Discount Value *</label>
+            <input type="number" id="discount_value" name="discount_value" required 
+                   min="0" step="0.01" value="{{ sale.get('discount_value', sale.get('sale_amount', 0)) }}">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="start_date">Start Date *</label>
+            <input type="date" id="start_date" name="start_date" required 
+                   value="{{ sale.start_date }}">
+          </div>
+
+          <div class="form-group">
+            <label for="end_date">End Date *</label>
+            <input type="date" id="end_date" name="end_date" required 
+                   value="{{ sale.end_date }}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" name="is_active" {{ 'checked' if sale.get('is_active', True) else '' }}>
+            Active Sale
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>Select Products</label>
+          <div class="products-selector">
+            <input type="text" id="productSearch" placeholder="Search products..." 
+                   class="search-input" onkeyup="filterProducts()">
+            <div class="products-list" id="productsList">
+              {% for product in all_products %}
+              <label class="product-checkbox">
+                <input type="checkbox" name="product_ids" value="{{ product.product_id }}"
+                       {{ 'checked' if product.product_id in selected_product_ids else '' }}>
+                <span class="product-name">{{ product.product_name }}</span>
+                <span class="product-price">{{ "%.2f"|format(product.price) }} ILS</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary btn-large">Update Sale</button>
+          <a href="{{ url_for('sale.view_sale', sale_id=sale.sale_id) }}" class="btn btn-ghost">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<style>
+  .sale-form-section {
+    padding: 32px 0;
+  }
+
+  .form-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px;
+    box-shadow: var(--shadow);
+  }
+
+  .form-group {
+    margin-bottom: 24px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .form-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+  }
+
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .products-selector {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+  }
+
+  .products-list {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 8px;
+  }
+
+  .product-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background .2s ease;
+  }
+
+  .product-checkbox:hover {
+    background: var(--bg);
+  }
+
+  .product-checkbox input[type="checkbox"] {
+    width: auto;
+    margin-right: 12px;
+  }
+
+  .product-name {
+    flex: 1;
+    font-size: 14px;
+  }
+
+  .product-price {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+  }
+</style>
+
+<script>
+function updateDiscountLabel() {
+  const type = document.getElementById('sale_type').value;
+  const label = document.getElementById('discount_label');
+  const input = document.getElementById('discount_value');
+  
+  if (type === 'percentage') {
+    label.textContent = 'Discount Percentage *';
+    input.max = 100;
+  } else {
+    label.textContent = 'Discount Amount (ILS) *';
+    input.removeAttribute('max');
+  }
+}
+
+function filterProducts() {
+  const search = document.getElementById('productSearch').value.toLowerCase();
+  const checkboxes = document.querySelectorAll('.product-checkbox');
+  
+  checkboxes.forEach(checkbox => {
+    const name = checkbox.querySelector('.product-name').textContent.toLowerCase();
+    if (name.includes(search)) {
+      checkbox.style.display = 'flex';
+    } else {
+      checkbox.style.display = 'none';
+    }
+  });
+}
+
+// Initialize label on page load
+document.addEventListener('DOMContentLoaded', updateDiscountLabel);
+</script>
+
+{% endblock %}
+

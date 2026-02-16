@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Browse Categories | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="section categories-browse">
+  <div class="container">
+    <!-- Page Header -->
+    <div class="section-head">
+      <div>
+        <h2>Browse Categories</h2>
+        <p>Explore our product categories and find exactly what you're looking for</p>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="filter-bar">
+      <form method="GET" action="{{ url_for('category.categories_ui') }}" class="filter-form">
+        <div class="filter-search">
+          <svg class="filter-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <input type="text" name="q" placeholder="Search categories..." value="{{ q or '' }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+        {% if q %}
+        <a href="{{ url_for('category.categories_ui') }}" class="btn btn-ghost">Clear</a>
+        {% endif %}
+      </form>
+    </div>
+
+    <!-- Results Count -->
+    <div class="results-info">
+      <span>Showing <strong>{{ categories|length }}</strong> categor{{ 'ies' if categories|length != 1 else 'y' }}</span>
+      {% if q %}<span class="results-query">for "<strong>{{ q }}</strong>"</span>{% endif %}
+    </div>
+
+    {% if categories %}
+    <!-- Categories List (Wide vertical cards) -->
+    <div class="categories-list">
+      {% for cat in categories %}
+      <div class="category-card-wide">
+        <div class="category-card-header">
+          <div class="category-card-icon">
+            {{ cat.category_name[0] }}
+          </div>
+          <div class="category-card-info">
+            <h3 class="category-card-title">{{ cat.category_name }}</h3>
+            <p class="category-card-desc">{{ cat.category_description or 'Explore our collection of ' + cat.category_name }}</p>
+            <div class="category-card-stats">
+              <span class="category-stat">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                  <line x1="7" y1="7" x2="7.01" y2="7"/>
+                </svg>
+                {{ cat.product_count }} Product{{ 's' if cat.product_count != 1 else '' }}
+              </span>
+            </div>
+          </div>
+          <a href="{{ url_for('product.products_ui', category=cat.category_id) }}" class="btn btn-primary category-view-btn">
+            View Products
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+
+        {% if cat.top_products %}
+        <div class="category-top-products">
+          <h4>Top Products</h4>
+          <div class="top-products-grid">
+            {% for p in cat.top_products %}
+            <div class="top-product-card">
+              <div class="top-product-image">
+                {% if p.primary_image %}
+                <img src="{{ p.primary_image }}" alt="{{ p.product_name }}" class="top-product-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <span class="top-product-initial" style="display:none;">{{ p.product_name[0] }}</span>
+                {% else %}
+                <span class="top-product-initial">{{ p.product_name[0] }}</span>
+                {% endif %}
+              </div>
+              <div class="top-product-info">
+                <div class="top-product-name">{{ p.product_name }}</div>
+                <div class="top-product-price">{{ "%.2f"|format(p.price) }} ILS</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <div class="category-no-products">
+          <p>No products in this category yet</p>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+          <line x1="7" y1="7" x2="7.01" y2="7"/>
+        </svg>
+      </div>
+      {% if q %}
+      <h3>No categories found</h3>
+      <p>No categories matching "{{ q }}". Try a different search term.</p>
+      <a href="{{ url_for('category.categories_ui') }}" class="btn btn-primary" style="margin-top: 20px;">View All Categories</a>
+      {% else %}
+      <h3>No categories available</h3>
+      <p>Check back soon for new categories!</p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

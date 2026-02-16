@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Warehouse #{{ warehouse.warehouse_id }} Products | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <a href="{{ url_for('warehouse.warehouses_ui') }}" class="back-link">← Back to Warehouses</a>
+      <h2>Warehouse #{{ warehouse.warehouse_id }} - Products</h2>
+      <p>Manage inventory for this warehouse</p>
+    </div>
+
+    <!-- Add Product Form -->
+    {% if available_products %}
+    <div class="card" style="margin-bottom: 32px;">
+      <h3 style="margin-bottom: 16px;">Add Product to Warehouse</h3>
+      <form method="POST" action="{{ url_for('warehouse.warehouse_products_add', warehouse_id=warehouse.warehouse_id) }}" class="form-inline">
+        <div style="display: flex; gap: 12px; align-items: flex-end;">
+          <div style="flex: 1;">
+            <label for="product_id">Product</label>
+            <select name="product_id" id="product_id" required style="width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 8px;">
+              <option value="">Select a product...</option>
+              {% for product in available_products %}
+              <option value="{{ product.product_id }}">{{ product.product_name }} - {{ "%.2f"|format(product.price) }} ILS</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div style="width: 120px;">
+            <label for="quantity">Quantity</label>
+            <input type="number" name="quantity" id="quantity" value="1" min="1" required 
+                   style="width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 8px;">
+          </div>
+          <div>
+            <button type="submit" class="btn btn-primary">Add Product</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    {% endif %}
+
+    <!-- Products List -->
+    {% if products %}
+    <div class="card">
+      <h3 style="margin-bottom: 24px;">Products in Warehouse ({{ products|length }})</h3>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Product ID</th>
+              <th>Product Name</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Quantity</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for product in products %}
+            <tr>
+              <td>{{ product.product_id }}</td>
+              <td><strong>{{ product.product_name }}</strong></td>
+              <td>{{ product.category_name or 'N/A' }}</td>
+              <td>{{ "%.2f"|format(product.price) }} ILS</td>
+              <td>
+                <form method="POST" 
+                      action="{{ url_for('warehouse.warehouse_products_update', warehouse_id=warehouse.warehouse_id, product_id=product.product_id) }}"
+                      style="display: inline-flex; gap: 8px; align-items: center;">
+                  <input type="number" 
+                         name="quantity" 
+                         value="{{ product.quantity }}" 
+                         min="0" 
+                         required
+                         style="width: 80px; padding: 6px; border: 1px solid var(--line); border-radius: 6px;">
+                  <button type="submit" class="btn btn-small">Update</button>
+                </form>
+              </td>
+              <td>
+                <form method="POST" 
+                      action="{{ url_for('warehouse.warehouse_products_remove', warehouse_id=warehouse.warehouse_id, product_id=product.product_id) }}"
+                      style="display: inline-block;"
+                      onsubmit="return confirm('Remove {{ product.product_name }} from this warehouse?');">
+                  <button type="submit" class="btn btn-small btn-danger">Remove</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <p>No products in this warehouse yet. Add products using the form above.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}
+

@@ -1,0 +1,499 @@
+{% extends "base.html" %}
+{% block title %}Create Product | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <h2>Create Product</h2>
+        <p>Add a new product to your catalog</p>
+      </div>
+    </div>
+
+    <div class="create-product-form">
+      <form method="POST" enctype="multipart/form-data" class="auth-form">
+        <!-- Basic Info Card -->
+        <div class="card form-card">
+          <h3 class="form-card-title">Basic Information</h3>
+
+          <div class="field">
+            <label for="product_name">Product Name *</label>
+            <input type="text" id="product_name" name="product_name" required
+                   placeholder="e.g., iPhone 15 Pro">
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="price">Price (ILS) *</label>
+              <input type="number" id="price" name="price" step="0.01" min="0" required
+                     placeholder="0.00">
+            </div>
+
+            <div class="field">
+              <label for="category_id">Category *</label>
+              <select id="category_id" name="category_id" required>
+                <option value="">Select a category...</option>
+                {% for cat in categories %}
+                <option value="{{ cat.category_id }}">{{ cat.category_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="product_description">Description</label>
+            <textarea id="product_description" name="product_description" rows="3"
+                      placeholder="Brief product description"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="warranty_provider">Warranty Provider</label>
+              <input type="text" id="warranty_provider" name="warranty_provider"
+                     placeholder="e.g., LTC Extended Care">
+            </div>
+
+            <div class="field">
+              <label for="warranty_months">Warranty (months)</label>
+              <input type="number" id="warranty_months" name="warranty_months" min="0" step="1"
+                     placeholder="e.g., 24">
+            </div>
+          </div>
+        </div>
+
+        <!-- Warehouse Inventory Card -->
+        {% if warehouses %}
+        <div class="card form-card">
+          <h3 class="form-card-title">Warehouse Inventory</h3>
+          <p class="form-card-subtitle">Specify the quantity available in each warehouse</p>
+
+          <div class="warehouse-grid">
+            {% for wh in warehouses %}
+            <div class="warehouse-input-card">
+              <div class="warehouse-input-header">
+                <div class="warehouse-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                  </svg>
+                </div>
+                <span>Warehouse #{{ wh.warehouse_id }}</span>
+              </div>
+              <input type="number" name="warehouse_{{ wh.warehouse_id }}"
+                     min="0" placeholder="0" value="0">
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <div class="card form-card">
+          <h3 class="form-card-title">Warehouse Inventory</h3>
+          <div class="empty-warehouse-notice">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p>No warehouses available. <a href="{{ url_for('warehouse.warehouses_ui') }}">Create a warehouse</a> first to manage inventory.</p>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Product Images Card -->
+        <div class="card form-card">
+          <h3 class="form-card-title">Product Images</h3>
+          <p class="form-card-subtitle">Upload product photos (PNG, JPG, WEBP). Click on an image to set it as primary.</p>
+
+          <div class="image-upload-area" id="imageUploadArea">
+            <input type="file" id="product_images" name="product_images"
+                   multiple accept="image/*" style="display: none;">
+            <input type="hidden" name="primary_image" id="primaryImageIndex" value="0">
+
+            <div class="upload-placeholder" id="uploadPlaceholder" onclick="document.getElementById('product_images').click()">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <span>Click to upload images</span>
+              <span class="upload-hint">or drag and drop</span>
+            </div>
+
+            <div class="image-preview-grid" id="imagePreviewGrid"></div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary btn-large">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Create Product
+          </button>
+          <a class="btn btn-ghost btn-large" href="{{ url_for('product.products_ui') }}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<style>
+.create-product-form {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.form-card {
+  margin-bottom: 24px;
+  padding: 28px;
+}
+
+.form-card-title {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.form-card-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.9);
+  outline: none;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  transition: .2s ease;
+}
+
+.field textarea:focus {
+  border-color: rgba(0,160,220,.5);
+  box-shadow: 0 0 0 4px rgba(0,160,220,.12);
+}
+
+.warehouse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.warehouse-input-card {
+  background: #fafafa;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all .2s ease;
+}
+
+.warehouse-input-card:focus-within {
+  border-color: var(--accent);
+  background: #fff;
+}
+
+.warehouse-input-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.warehouse-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.warehouse-input-card input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.warehouse-input-card input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.empty-warehouse-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px;
+  background: rgba(245, 158, 11, .08);
+  border-radius: 12px;
+  color: #d97706;
+  text-align: center;
+}
+
+.empty-warehouse-notice a {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.image-upload-area {
+  border: 2px dashed var(--line);
+  border-radius: 16px;
+  padding: 24px;
+  transition: all .3s ease;
+}
+
+.image-upload-area.dragover {
+  border-color: var(--accent);
+  background: rgba(0,160,220,.05);
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all .2s ease;
+}
+
+.upload-placeholder:hover {
+  color: var(--accent);
+}
+
+.upload-placeholder svg {
+  opacity: 0.5;
+}
+
+.upload-placeholder span {
+  font-weight: 600;
+}
+
+.upload-hint {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.image-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.image-preview-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: all .2s ease;
+}
+
+.image-preview-item:hover {
+  transform: scale(1.02);
+}
+
+.image-preview-item.primary {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,160,220,.2);
+}
+
+.image-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-preview-item .primary-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.image-preview-item .remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.9);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity .2s ease;
+}
+
+.image-preview-item:hover .remove-btn {
+  opacity: 1;
+}
+
+.form-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+}
+
+.btn-large {
+  padding: 16px 32px;
+  font-size: 16px;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const fileInput = document.getElementById('product_images');
+  const uploadArea = document.getElementById('imageUploadArea');
+  const previewGrid = document.getElementById('imagePreviewGrid');
+  const placeholder = document.getElementById('uploadPlaceholder');
+  const primaryInput = document.getElementById('primaryImageIndex');
+
+  let selectedFiles = [];
+  let primaryIndex = 0;
+
+  // Drag and drop
+  uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+  });
+
+  uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+  });
+
+  uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+  });
+
+  // File input change
+  fileInput.addEventListener('change', (e) => {
+    handleFiles(e.target.files);
+  });
+
+  function handleFiles(files) {
+    for (let file of files) {
+      if (file.type.startsWith('image/')) {
+        selectedFiles.push(file);
+      }
+    }
+    updatePreview();
+    updateFileInput();
+  }
+
+  function updatePreview() {
+    previewGrid.innerHTML = '';
+
+    if (selectedFiles.length > 0) {
+      placeholder.style.display = 'none';
+    } else {
+      placeholder.style.display = 'flex';
+    }
+
+    selectedFiles.forEach((file, index) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const div = document.createElement('div');
+        div.className = 'image-preview-item' + (index === primaryIndex ? ' primary' : '');
+        div.innerHTML = `
+          <img src="${e.target.result}" alt="Preview">
+          ${index === primaryIndex ? '<span class="primary-badge">Primary</span>' : ''}
+          <button type="button" class="remove-btn" data-index="${index}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        `;
+
+        // Click to set as primary
+        div.addEventListener('click', (e) => {
+          if (!e.target.closest('.remove-btn')) {
+            primaryIndex = index;
+            primaryInput.value = index;
+            updatePreview();
+          }
+        });
+
+        // Remove button
+        div.querySelector('.remove-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectedFiles.splice(index, 1);
+          if (primaryIndex >= selectedFiles.length) {
+            primaryIndex = Math.max(0, selectedFiles.length - 1);
+          }
+          primaryInput.value = primaryIndex;
+          updatePreview();
+          updateFileInput();
+        });
+
+        previewGrid.appendChild(div);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function updateFileInput() {
+    // Create a new DataTransfer to update the file input
+    const dt = new DataTransfer();
+    selectedFiles.forEach(file => dt.items.add(file));
+    fileInput.files = dt.files;
+  }
+});
+</script>
+
+{% endblock %}

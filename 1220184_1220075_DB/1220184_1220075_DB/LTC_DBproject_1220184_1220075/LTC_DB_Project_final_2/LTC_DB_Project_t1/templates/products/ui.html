@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block title %}Products{% endblock %}
+
+{% block content %}
+<div class="row space-between">
+  <div>
+    <h2>Products</h2>
+    <p class="muted" id="totalText">Loading...</p>
+  </div>
+</div>
+
+<!-- Search + Filter -->
+<div class="grid-3">
+  <div class="box">
+    <h3>Search by name</h3>
+    <div class="row gap">
+      <input id="searchQ" type="text" placeholder="e.g. laptop">
+      <button class="btn" onclick="searchProducts()">Search</button>
+    </div>
+  </div>
+
+  <div class="box">
+    <h3>Filter by price</h3>
+    <div class="row gap">
+      <input id="minPrice" type="number" placeholder="min">
+      <input id="maxPrice" type="number" placeholder="max">
+      <button class="btn" onclick="filterProducts()">Filter</button>
+    </div>
+  </div>
+
+  <div class="box">
+    <h3>Reset</h3>
+    <button class="btn secondary" onclick="loadProducts()">Show all</button>
+  </div>
+</div>
+
+<hr class="hr">
+
+<!-- Create -->
+<div class="box">
+  <h3>Create product</h3>
+
+  <div class="grid-3">
+    <input id="newName" type="text" placeholder="product_name">
+    <input id="newDesc" type="text" placeholder="product_description">
+    <input id="newPrice" type="number" placeholder="price">
+  </div>
+
+  <div class="row gap" style="margin-top: 10px;">
+    <input id="newCategoryId" type="number" min="1" placeholder="category_id" style="max-width: 220px;">
+  </div>
+
+  <div class="row gap">
+    <button class="btn" onclick="createProduct()">Create</button>
+    <span id="msg" class="muted"></span>
+  </div>
+</div>
+
+<hr class="hr">
+
+<!-- Table -->
+<div class="table-wrap">
+  <table class="table" id="productsTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Price</th>
+        <th>Category ID</th>
+        <th style="width: 260px;">Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<script>
+  async function api(path, options = {}) {
+    const res = await fetch(path, {
+      headers: { "Content-Type": "application/json" },
+      ...options,
+    });
+    const text = await res.text();
+    let data;
+    try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+    if (!res.ok) throw (data || { error: "Request failed" });
+    return data;
+  }
+
+  function setMsg(t) { document.getElementById("msg").textContent = t || ""; }
+
+  async function loadProducts() {
+    setMsg("");
+    const data = await api("/products");
+    document.getElementById("totalText").textContent = `Total products in DB: ${data.total}`;
+    renderRows(data.results);
+  }
+
+  async function searchProducts() {
+    const q = document.getElementById("searchQ").value.trim();
+    if (!q) return loadProducts();
+    const data = await api(`/products?q=${encodeURIComponent(q)}`);
+    document.getElementById("totalText").textContent = `Search results for: "${q}"`;
+    renderRows(data.results);
+  }
+
+  async function filterProducts() {
+    const min = document.getElementById("minPrice").value;
+    const max = document.getElementById("maxPrice").value;
+    if (min === "" || max === "") { setMsg("Enter min and max."); return; }
+    const data = await api(`/products?min=${encodeURIComponent(min)}&max=${encodeURIComponent(max)}`);
+    document.getElementById("totalText").textContent = `Filtered: ${min} to ${max}`;
+    renderRows(data.results);
+  }
+
+  async function createProduct() {
+    const product_name = document.getElementById("newName").value.trim();
+    const product_description = document.getElementById("newDesc").value.trim();
+    const price = document.getElementById("newPrice").value;
+    const category_id = document.getElementById("newCategoryId").value;
+
+    if (!product_name || price === "" || category_id === "") {
+      setMsg("product_name, price, and category_id are required.");
+      return;
+    }
+
+    await api("/products", {
+      method: "POST",
+      body: JSON.stringify({
+        product_name,
+        product_description,
+        price: Number(price),
+        category_id: Number(category_id)
+      })
+    });
+
+    document.getElementById("newName").value = "";
+    document.getElementById("newDesc").value = "";
+    document.getElementById("newPrice").value = "";
+    document.getElementById("newCategoryId").value = "";
+    setMsg("Created ✅");
+    await loadProducts();
+  }
+
+  async function deleteProduct(id) {
+    if (!confirm(`Delete product ${id}?`)) return;
+    await api(`/products/${id}`, { method: "DELETE" });
+    setMsg("Deleted ✅");
+    await loadProducts();
+  }
+
+  async function putUpdate(id) {
+    const name = document.getElementById(`name_${id}`).value.trim();
+    const desc = document.getElementById(`desc_${id}`).value.trim();
+    const price = document.getElementById(`price_${id}`).value;
+    const category_id = document.getElementById(`cat_${id}`).value;
+
+    if (!name || price === "" || category_id === "") {
+      setMsg("Name, price, and category_id are required for PUT.");
+      return;
+    }
+
+    await api(`/products/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        product_name: name,
+        product_description: desc,
+        price: Number(price),
+        category_id: Number(category_id)
+      })
+    });
+
+    setMsg("Updated (PUT) ✅");
+    await loadProducts();
+  }
+
+  async function patchPrice(id) {
+    const price = prompt("New price?");
+    if (price === null || price.trim() === "") return;
+
+    await api(`/products/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ price: Number(price) })
+    });
+
+    setMsg("Updated price (PATCH) ✅");
+    await loadProducts();
+  }
+
+  function renderRows(rows) {
+    const tbody = document.getElementById("tbody");
+    tbody.innerHTML = "";
+
+    rows.forEach(p => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${p.product_id}</td>
+        <td><input class="cell-input" id="name_${p.product_id}" value="${escapeHtml(p.product_name || "")}"></td>
+        <td><input class="cell-input" id="desc_${p.product_id}" value="${escapeHtml(p.product_description || "")}"></td>
+        <td><input class="cell-input" id="price_${p.product_id}" type="number" value="${p.price ?? ""}"></td>
+        <td><input class="cell-input" id="cat_${p.product_id}" type="number" min="1" value="${p.category_id ?? ""}"></td>
+        <td class="row gap">
+          <button class="btn small" onclick="putUpdate(${p.product_id})">PUT Update</button>
+          <button class="btn small secondary" onclick="patchPrice(${p.product_id})">PATCH Price</button>
+          <button class="btn small danger" onclick="deleteProduct(${p.product_id})">DELETE</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    if (rows.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="6" class="muted">No products found.</td>`;
+      tbody.appendChild(tr);
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  loadProducts();
+</script>
+{% endblock %}

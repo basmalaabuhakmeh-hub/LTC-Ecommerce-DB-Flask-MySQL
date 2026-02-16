@@ -1,0 +1,574 @@
+{% extends "base.html" %}
+{% block title %}My Orders | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="section orders-section">
+  <div class="container">
+    <!-- Back Link -->
+    <a href="{{ url_for('user.customer_dashboard') }}" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Back to Dashboard
+    </a>
+
+    <!-- Page Header -->
+    <div class="section-head">
+      <div>
+        <h2>My Orders</h2>
+        <p>View and track your order history</p>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="orders-stats-grid">
+      <div class="orders-stat-card">
+        <div class="orders-stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+        </div>
+        <div class="orders-stat-info">
+          <div class="orders-stat-value">{{ stats.total_orders or 0 }}</div>
+          <div class="orders-stat-label">Total Orders</div>
+        </div>
+      </div>
+
+      <div class="orders-stat-card">
+        <div class="orders-stat-icon orders-stat-icon-green">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div class="orders-stat-info">
+          <div class="orders-stat-value">{{ "%.2f"|format(stats.total_spent or 0) }} ILS</div>
+          <div class="orders-stat-label">Total Spent</div>
+        </div>
+      </div>
+
+      <div class="orders-stat-card">
+        <div class="orders-stat-icon orders-stat-icon-purple">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <div class="orders-stat-info">
+          <div class="orders-stat-value">{{ "%.2f"|format(stats.avg_order_value or 0) }} ILS</div>
+          <div class="orders-stat-label">Avg. Order Value</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar orders-filter-bar">
+      <form method="GET" action="{{ url_for('order.my_orders') }}" class="filter-form" id="ordersFilterForm">
+        <!-- Period Filter -->
+        <div class="filter-select">
+          <select name="period" onchange="this.form.submit()">
+            <option value="">All Time</option>
+            <option value="weekly" {{ 'selected' if selected_period == 'weekly' else '' }}>This Week</option>
+            <option value="monthly" {{ 'selected' if selected_period == 'monthly' else '' }}>This Month</option>
+            <option value="yearly" {{ 'selected' if selected_period == 'yearly' else '' }}>This Year</option>
+          </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="filter-select">
+          <select name="status" onchange="this.form.submit()">
+            <option value="">All Statuses</option>
+            {% for s in all_statuses %}
+            <option value="{{ s }}" {{ 'selected' if selected_status == s else '' }}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Date Range -->
+        <div class="filter-date-range">
+          <input type="date" name="start_date" value="{{ start_date or '' }}" placeholder="From">
+          <span class="filter-date-sep">to</span>
+          <input type="date" name="end_date" value="{{ end_date or '' }}" placeholder="To">
+        </div>
+
+        <!-- Action Buttons -->
+        <button type="submit" class="btn btn-primary">Apply</button>
+        {% if selected_period or selected_status or start_date or end_date %}
+        <a href="{{ url_for('order.my_orders') }}" class="btn btn-ghost">Clear</a>
+        {% endif %}
+      </form>
+    </div>
+
+    <div class="orders-content-grid">
+      <!-- Orders List -->
+      <div class="orders-list-section">
+        <h3 class="orders-section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="3" width="15" height="13"/>
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+            <circle cx="5.5" cy="18.5" r="2.5"/>
+            <circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+          Orders ({{ orders|length }})
+        </h3>
+
+        {% if orders %}
+        <div class="orders-list">
+          {% for order in orders %}
+          <a href="{{ url_for('order.order_details', order_id=order.order_id) }}" class="order-card">
+            <div class="order-card-header">
+              <div class="order-card-id">Order #{{ order.order_id }}</div>
+              <div class="order-card-status status-{{ (order.delivery_status or 'pending')|lower|replace(' ', '-') }}">
+                {{ order.delivery_status or 'Pending' }}
+              </div>
+            </div>
+            <div class="order-card-body">
+              <div class="order-card-date">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                {{ order.order_date }}
+              </div>
+              <div class="order-card-items">{{ order.item_count }} item{{ 's' if order.item_count != 1 else '' }}</div>
+            </div>
+            <div class="order-card-footer">
+              <div class="order-card-total">{{ "%.2f"|format(order.total_price) }} ILS</div>
+              <div class="order-card-arrow">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state orders-empty">
+          <div class="empty-state-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+          </div>
+          {% if selected_period or selected_status or start_date or end_date %}
+          <h3>No orders found</h3>
+          <p>Try adjusting your filters</p>
+          <a href="{{ url_for('order.my_orders') }}" class="btn btn-primary" style="margin-top: 16px;">View All Orders</a>
+          {% else %}
+          <h3>No orders yet</h3>
+          <p>Your order history will appear here once you make a purchase</p>
+          <a href="{{ url_for('product.products_ui') }}" class="btn btn-primary" style="margin-top: 16px;">Browse Products</a>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Spending Summary Sidebar -->
+      <div class="orders-sidebar">
+        <div class="spending-summary-card">
+          <h3 class="spending-summary-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+              <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+            </svg>
+            Spending by Category
+          </h3>
+
+          {% if spending_by_category %}
+          <div class="spending-category-list">
+            {% set total_category_spent = spending_by_category|sum(attribute='category_spent') %}
+            {% for cat in spending_by_category %}
+            <div class="spending-category-item">
+              <div class="spending-category-info">
+                <div class="spending-category-name">{{ cat.category_name }}</div>
+                <div class="spending-category-items">{{ cat.items_bought }} item{{ 's' if cat.items_bought != 1 else '' }}</div>
+              </div>
+              <div class="spending-category-amount">{{ "%.2f"|format(cat.category_spent) }} ILS</div>
+              <div class="spending-category-bar">
+                <div class="spending-category-bar-fill" style="width: {{ (cat.category_spent / total_category_spent * 100) if total_category_spent > 0 else 0 }}%"></div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="spending-summary-total">
+            <span>Total</span>
+            <span>{{ "%.2f"|format(total_category_spent) }} ILS</span>
+          </div>
+          {% else %}
+          <div class="spending-empty">
+            <p>No spending data for the selected period</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+/* Orders Page Styles */
+.orders-section {
+  padding: 40px 0 80px;
+}
+
+/* Back Link */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 24px;
+  transition: color 0.2s;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--accent);
+}
+
+/* Stats Grid */
+.orders-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.orders-stat-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.orders-stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(0,160,220,.1), rgba(0,160,220,.05));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.orders-stat-icon-green {
+  background: linear-gradient(135deg, rgba(16,185,129,.1), rgba(16,185,129,.05));
+  color: #10b981;
+}
+
+.orders-stat-icon-purple {
+  background: linear-gradient(135deg, rgba(139,92,246,.1), rgba(139,92,246,.05));
+  color: #8b5cf6;
+}
+
+.orders-stat-value {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.orders-stat-label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Filter Bar */
+.orders-filter-bar {
+  margin-bottom: 32px;
+}
+
+.filter-date-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-date-range input {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.filter-date-sep {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Content Grid */
+.orders-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 32px;
+  align-items: start;
+}
+
+/* Orders List Section */
+.orders-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.orders-section-title svg {
+  color: var(--accent);
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Order Card */
+.order-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: block;
+}
+
+.order-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 20px rgba(0,160,220,.1);
+  transform: translateY(-2px);
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.order-card-id {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.order-card-status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+  text-transform: capitalize;
+}
+
+.status-pending, .status-processing {
+  background: rgba(245,158,11,.1);
+  color: #f59e0b;
+}
+
+.status-shipped, .status-in-transit {
+  background: rgba(59,130,246,.1);
+  color: #3b82f6;
+}
+
+.status-delivered, .status-completed {
+  background: rgba(16,185,129,.1);
+  color: #10b981;
+}
+
+.status-cancelled, .status-returned {
+  background: rgba(239,68,68,.1);
+  color: #ef4444;
+}
+
+.order-card-body {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.order-card-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.order-card-items {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.order-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-card-total {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.order-card-arrow {
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+
+.order-card:hover .order-card-arrow {
+  transform: translateX(4px);
+  color: var(--accent);
+}
+
+/* Empty State */
+.orders-empty {
+  padding: 60px 40px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+/* Spending Summary Sidebar */
+.spending-summary-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  position: sticky;
+  top: 100px;
+}
+
+.spending-summary-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.spending-summary-title svg {
+  color: var(--accent);
+}
+
+.spending-category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.spending-category-item {
+  display: grid;
+  gap: 6px;
+}
+
+.spending-category-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.spending-category-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.spending-category-items {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.spending-category-amount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  text-align: right;
+}
+
+.spending-category-bar {
+  height: 6px;
+  background: var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.spending-category-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.spending-summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.spending-empty {
+  text-align: center;
+  padding: 24px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .orders-content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .orders-sidebar {
+    order: -1;
+  }
+
+  .spending-summary-card {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .orders-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-form {
+    flex-wrap: wrap;
+  }
+
+  .filter-date-range {
+    width: 100%;
+  }
+}
+</style>
+
+{% endblock %}

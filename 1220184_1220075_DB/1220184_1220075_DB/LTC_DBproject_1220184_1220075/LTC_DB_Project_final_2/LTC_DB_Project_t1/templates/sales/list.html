@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}Sales Management | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="section sales-section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <h2>Sales Management</h2>
+        <p>Create and manage product sales and discounts</p>
+      </div>
+      <a href="{{ url_for('sale.create_sale_route') }}" class="btn btn-primary">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Create New Sale
+      </a>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid" style="margin-bottom: 32px;">
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.active }}</div>
+        <div class="stat-label">Active Sales</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.upcoming }}</div>
+        <div class="stat-label">Upcoming Sales</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.total }}</div>
+        <div class="stat-label">Total Sales</div>
+      </div>
+    </div>
+
+    <!-- Sales List -->
+    {% if sales %}
+    <div class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Sale Name</th>
+            <th>Type</th>
+            <th>Discount</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sale in sales %}
+          <tr>
+            <td><strong>{{ sale.get('sale_name', 'Sale') }}</strong></td>
+            <td>
+              <span class="badge badge-{{ 'primary' if sale.get('sale_type', 'percentage') == 'percentage' else 'secondary' }}">
+                {{ sale.get('sale_type', 'percentage')|title }}
+              </span>
+            </td>
+            <td>
+              {% if sale.get('sale_type', 'percentage') == 'percentage' %}
+                {{ "%.0f"|format(sale.get('discount_value', sale.get('sale_amount', 0))) }}%
+              {% else %}
+                {{ "%.2f"|format(sale.get('discount_value', sale.get('sale_amount', 0))) }} ILS
+              {% endif %}
+            </td>
+            <td>{{ sale.start_date }}</td>
+            <td>{{ sale.end_date }}</td>
+            <td>
+              {% if sale.get('is_active', True) %}
+                <span class="status-badge status-active">Active</span>
+              {% else %}
+                <span class="status-badge status-inactive">Inactive</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="action-buttons">
+                <a href="{{ url_for('sale.view_sale', sale_id=sale.sale_id) }}" class="btn-icon" title="View">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </a>
+                <a href="{{ url_for('sale.edit_sale', sale_id=sale.sale_id) }}" class="btn-icon" title="Edit">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </a>
+                <form method="POST" action="{{ url_for('sale.delete_sale_route', sale_id=sale.sale_id) }}" 
+                      style="display: inline;" 
+                      onsubmit="return confirm('Are you sure you want to delete this sale?');">
+                  <button type="submit" class="btn-icon btn-danger" title="Delete">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <h3>No sales found</h3>
+      <p>Create your first sale to get started</p>
+      <a href="{{ url_for('sale.create_sale_route') }}" class="btn btn-primary">Create Sale</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  .sales-section {
+    padding: 32px 0;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+
+  .stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .stat-label {
+    font-size: 14px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-primary {
+    background: rgba(0, 160, 220, 0.1);
+    color: var(--accent);
+  }
+
+  .badge-secondary {
+    background: rgba(141, 198, 63, 0.1);
+    color: var(--accent2);
+  }
+
+  .status-active {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+  }
+
+  .status-inactive {
+    background: rgba(107, 114, 128, 0.15);
+    color: #6b7280;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    transition: all .2s ease;
+  }
+
+  .btn-icon:hover {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-icon.btn-danger:hover {
+    background: #e74c3c;
+    color: white;
+  }
+</style>
+
+{% endblock %}
+

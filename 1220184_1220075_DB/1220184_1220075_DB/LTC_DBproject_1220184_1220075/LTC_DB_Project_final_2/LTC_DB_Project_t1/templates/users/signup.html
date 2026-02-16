@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Sign Up | LTC Electronics{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <div class="account-shell">
+    <div class="account-badge">NEW ACCOUNT</div>
+
+    <h1 class="account-title">Create your account</h1>
+    <p class="account-sub">Join LTC to save your info and checkout faster.</p>
+
+    <form class="auth-form" method="POST" action="{{ url_for('user.signup') }}">
+      <!-- Flash messages inside form -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="auth-flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="grid-2 auth-grid">
+        <div class="field">
+          <label for="first_name">First name</label>
+          <input id="first_name" name="first_name" type="text" placeholder="First name" value="{{ form_data.first_name or '' }}" required>
+        </div>
+
+        <div class="field">
+          <label for="last_name">Last name</label>
+          <input id="last_name" name="last_name" type="text" placeholder="Last name" value="{{ form_data.last_name or '' }}" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" placeholder="name@example.com" value="{{ form_data.email or '' }}" required>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="Create a strong password" required>
+      </div>
+
+      <!-- Account type removed: signups default to customer -->
+
+      <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+
+      <div class="auth-links">
+        <a href="{{ url_for('user.login') }}">Already have an account? Login</a>
+      </div>
+
+      <p class="auth-terms">
+        By creating an account, you agree to our <span class="muted">Terms</span> and <span class="muted">Privacy Policy</span>.
+      </p>
+    </form>
+  </div>
+</section>
+{% endblock %}

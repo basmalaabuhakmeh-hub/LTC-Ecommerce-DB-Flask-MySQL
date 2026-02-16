@@ -1,0 +1,602 @@
+{% extends "base.html" %}
+{% block title %}Order Management | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="section employee-orders-section">
+  <div class="container">
+    <!-- Back to Dashboard -->
+    <a href="{{ url_for('user.employee_dashboard') }}" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Back to Dashboard
+    </a>
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1>Order Management</h1>
+        <p class="page-subtitle">Track and manage customer orders</p>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-row">
+      <div class="stat-card stat-total">
+        <div class="stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.total_orders }}</div>
+          <div class="stat-label">Total Orders</div>
+        </div>
+      </div>
+
+      <div class="stat-card stat-pending">
+        <div class="stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.status_counts.get('Pending', 0) }}</div>
+          <div class="stat-label">Pending</div>
+        </div>
+      </div>
+
+      <div class="stat-card stat-processing">
+        <div class="stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.status_counts.get('Processing', 0) }}</div>
+          <div class="stat-label">Processing</div>
+        </div>
+      </div>
+
+      <div class="stat-card stat-shipped">
+        <div class="stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="3" width="15" height="13"/>
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+            <circle cx="5.5" cy="18.5" r="2.5"/>
+            <circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.status_counts.get('Shipped', 0) + stats.status_counts.get('In Transit', 0) }}</div>
+          <div class="stat-label">In Transit</div>
+        </div>
+      </div>
+
+      <div class="stat-card stat-delivered">
+        <div class="stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ stats.status_counts.get('Delivered', 0) }}</div>
+          <div class="stat-label">Delivered</div>
+        </div>
+      </div>
+
+      <div class="stat-card stat-revenue">
+        <div class="stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ "%.0f"|format(stats.total_revenue) }} ILS</div>
+          <div class="stat-label">Total Revenue</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+      <form method="GET" class="filter-form">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="user_id">Customer</label>
+            <select name="user_id" id="user_id">
+              <option value="">All Customers</option>
+              {% for customer in customers %}
+              <option value="{{ customer.user_id }}" {{ 'selected' if filters.user_id == customer.user_id }}>
+                {{ customer.first_name }} {{ customer.last_name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="status">Status</label>
+            <select name="status" id="status">
+              <option value="">All Statuses</option>
+              {% for status in status_options %}
+              <option value="{{ status }}" {{ 'selected' if filters.status == status }}>{{ status }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="city">City</label>
+            <input type="text" name="city" id="city" placeholder="Filter by city..." value="{{ filters.city or '' }}">
+          </div>
+
+          <div class="filter-group">
+            <label for="min_price">Min Price</label>
+            <input type="number" name="min_price" id="min_price" placeholder="Min" value="{{ filters.min_price or '' }}" step="0.01">
+          </div>
+
+          <div class="filter-group">
+            <label for="max_price">Max Price</label>
+            <input type="number" name="max_price" id="max_price" placeholder="Max" value="{{ filters.max_price or '' }}" step="0.01">
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="start_date">From Date</label>
+            <input type="date" name="start_date" id="start_date" value="{{ filters.start_date or '' }}">
+          </div>
+
+          <div class="filter-group">
+            <label for="end_date">To Date</label>
+            <input type="date" name="end_date" id="end_date" value="{{ filters.end_date or '' }}">
+          </div>
+
+          <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              Filter
+            </button>
+            <a href="{{ url_for('user.employee_orders') }}" class="btn btn-secondary">Clear</a>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="orders-table-card">
+      <div class="table-header">
+        <h3>Orders ({{ orders|length }})</h3>
+      </div>
+
+      {% if orders %}
+      <div class="table-responsive">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Delivery Address</th>
+              <th>Items</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+            <tr>
+              <td>
+                <a href="{{ url_for('user.employee_order_details', order_id=order.order_id) }}" class="order-id-link">
+                  #{{ order.order_id }}
+                </a>
+              </td>
+              <td>
+                <div class="customer-info">
+                  <span class="customer-name">{{ order.first_name }} {{ order.last_name }}</span>
+                  <span class="customer-email">{{ order.email }}</span>
+                </div>
+              </td>
+              <td>{{ order.order_date }}</td>
+              <td>
+                <div class="address-info">
+                  {% if order.city %}
+                  {{ order.city }}{% if order.country %}, {{ order.country }}{% endif %}
+                  {% else %}
+                  <span class="text-muted">No address</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td>{{ order.item_count }}</td>
+              <td class="order-total">{{ "%.2f"|format(order.total_price) }} ILS</td>
+              <td>
+                <span class="status-badge status-{{ (order.delivery_status or 'pending')|lower|replace(' ', '-') }}">
+                  {{ order.delivery_status or 'Pending' }}
+                </span>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <form method="POST" action="{{ url_for('user.update_order_status_route', order_id=order.order_id) }}" class="status-form">
+                    <select name="status" class="status-select" onchange="this.form.submit()">
+                      {% for status in status_options %}
+                      <option value="{{ status }}" {{ 'selected' if (order.delivery_status or 'Pending') == status }}>
+                        {{ status }}
+                      </option>
+                      {% endfor %}
+                    </select>
+                  </form>
+                  <a href="{{ url_for('user.employee_order_details', order_id=order.order_id) }}" class="btn-icon" title="View Details">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        <p>No orders found matching your criteria</p>
+        <a href="{{ url_for('user.employee_orders') }}" class="btn btn-primary">Clear Filters</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<style>
+/* Employee Orders Page Styles */
+.employee-orders-section {
+  padding: 40px 0 80px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 24px;
+  transition: color 0.2s;
+}
+
+.back-link:hover {
+  color: var(--accent);
+}
+
+.page-header {
+  margin-bottom: 32px;
+}
+
+.page-header h1 {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.page-subtitle {
+  color: var(--muted);
+  font-size: 16px;
+}
+
+/* Statistics Cards */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-total .stat-icon { background: rgba(0,160,220,.1); color: var(--accent); }
+.stat-pending .stat-icon { background: rgba(245,158,11,.1); color: #f59e0b; }
+.stat-processing .stat-icon { background: rgba(59,130,246,.1); color: #3b82f6; }
+.stat-shipped .stat-icon { background: rgba(139,92,246,.1); color: #8b5cf6; }
+.stat-delivered .stat-icon { background: rgba(16,185,129,.1); color: #10b981; }
+.stat-revenue .stat-icon { background: rgba(236,72,153,.1); color: #ec4899; }
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Filter Card */
+.filter-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.filter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.filter-group {
+  flex: 1;
+  min-width: 150px;
+}
+
+.filter-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.filter-group input,
+.filter-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.filter-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Orders Table */
+.orders-table-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.table-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.table-header h3 {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.orders-table th,
+.orders-table td {
+  padding: 16px 20px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.orders-table th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 1px solid var(--line);
+}
+
+.orders-table td {
+  border-bottom: 1px solid var(--line);
+}
+
+.orders-table tr:last-child td {
+  border-bottom: none;
+}
+
+.orders-table tr:hover {
+  background: #f8fafc;
+}
+
+.order-id-link {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.customer-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.customer-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.customer-email {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.address-info {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.order-total {
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Status Badge */
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-pending { background: rgba(245,158,11,.1); color: #d97706; }
+.status-processing { background: rgba(59,130,246,.1); color: #2563eb; }
+.status-shipped { background: rgba(139,92,246,.1); color: #7c3aed; }
+.status-in-transit { background: rgba(139,92,246,.1); color: #7c3aed; }
+.status-delivered { background: rgba(16,185,129,.1); color: #059669; }
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-form {
+  display: inline-block;
+}
+
+.status-select {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 12px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-subtle, #f1f5f9);
+  color: var(--muted);
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Empty State */
+.empty-state {
+  padding: 60px 24px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.empty-state svg {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.text-muted {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .stats-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filter-group {
+    min-width: 100%;
+  }
+
+  .orders-table th,
+  .orders-table td {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Categories | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <h2>Categories</h2>
+        <p>Manage product categories</p>
+      </div>
+      {% if session.get('user_type') == 'employee' %}
+      <a class="btn btn-primary" href="{{ url_for('category.categories_ui_create') }}">+ Add Category</a>
+      {% endif %}
+    </div>
+
+    {% if categories %}
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Category Name</th>
+              <th>Description</th>
+              {% if session.get('user_type') == 'employee' %}
+              <th>Actions</th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for cat in categories %}
+            <tr>
+              <td>{{ cat.category_id }}</td>
+              <td><strong>{{ cat.category_name }}</strong></td>
+              <td>{{ cat.category_description or '—' }}</td>
+              {% if session.get('user_type') == 'employee' %}
+              <td>
+                <div style="display: flex; gap: 8px;">
+                  <a class="btn btn-small btn-secondary" href="{{ url_for('category.categories_ui_edit', category_id=cat.category_id) }}">Edit</a>
+                  <form method="POST"
+                        action="{{ url_for('category.categories_ui_delete', category_id=cat.category_id) }}"
+                        style="display:inline;"
+                        onsubmit="return confirm('Delete {{ cat.category_name }}? This will affect products in this category.');">
+                    <button type="submit" class="btn btn-small btn-danger">Delete</button>
+                  </form>
+                </div>
+              </td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <p>No categories found. {% if session.get('user_type') == 'employee' %}Create your first category to get started.{% endif %}</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}
+

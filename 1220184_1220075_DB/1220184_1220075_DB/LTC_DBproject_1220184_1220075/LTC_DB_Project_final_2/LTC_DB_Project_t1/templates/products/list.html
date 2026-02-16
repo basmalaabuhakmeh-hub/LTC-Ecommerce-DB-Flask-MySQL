@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Products | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <h2>Products</h2>
+        <p>Manage your product catalog</p>
+      </div>
+      <a class="btn btn-primary" href="{{ url_for('product.products_ui_create') }}">+ Add Product</a>
+    </div>
+
+    {% if products %}
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in products %}
+            <tr>
+              <td>{{ p.product_id }}</td>
+              <td><strong>{{ p.product_name }}</strong></td>
+              <td>{{ p.product_description or '—' }}</td>
+              <td>{{ p.category_name or 'N/A' }}</td>
+              <td>{{ "%.2f"|format(p.price) }} ILS</td>
+              <td>
+                <div style="display: flex; gap: 8px;">
+                  <a class="btn btn-small btn-secondary" href="{{ url_for('product.products_ui_edit', product_id=p.product_id) }}">Edit</a>
+                  <form method="POST"
+                        action="{{ url_for('product.products_ui_delete', product_id=p.product_id) }}"
+                        style="display:inline;"
+                        onsubmit="return confirm('Delete {{ p.product_name }}?');">
+                    <button type="submit" class="btn btn-small btn-danger">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <p>No products found. Create your first product to get started.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

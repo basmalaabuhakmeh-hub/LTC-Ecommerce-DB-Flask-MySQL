@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Login | LTC Electronics{% endblock %}
+
+{% block content %}
+<section class="auth-wrap">
+  <div class="account-shell">
+    <div class="account-badge">ACCOUNT</div>
+
+    <h1 class="account-title">Welcome back</h1>
+    <p class="account-sub">Login to continue shopping and manage your account.</p>
+
+    <form method="post" class="auth-form">
+      <!-- Flash messages inside form -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="auth-flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      <label class="field">
+        <span class="field-label">Email</span>
+        <input class="input" name="email" type="email" placeholder="you@example.com" required>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Password</span>
+        <input class="input" type="password" name="password" placeholder="Your password" required>
+      </label>
+
+      <label class="field checkbox-field">
+        <input type="checkbox" name="remember_me" id="remember_me">
+        <span class="checkbox-label">Remember me</span>
+      </label>
+
+      <button class="btn btn-primary auth-submit" type="submit">Login</button>
+
+      <div class="auth-links">
+        <span class="muted">Don’t have an account?</span>
+        <a class="auth-link" href="/auth/signup">Create one</a>
+      </div>
+    </form>
+
+    <div class="account-hint">
+      <span class="dot"></span>
+      <span>Trusted electronics store • Secure payments • Fast delivery</span>
+    </div>
+  </div>
+</section>
+{% endblock %}

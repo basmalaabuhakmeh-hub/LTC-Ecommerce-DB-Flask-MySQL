@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Add Employee - LTC Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <a href="/admin/employees" class="breadcrumb-link">&larr; Back to Employees</a>
+    <h1>Add New Employee</h1>
+    <p class="muted">Create a new employee account</p>
+  </div>
+
+  <div class="form-card">
+    <form method="POST" action="/admin/employees/add">
+      <div class="form-section">
+        <h3>Personal Information</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="first_name">First Name *</label>
+            <input type="text" id="first_name" name="first_name" required placeholder="John">
+          </div>
+          <div class="form-group">
+            <label for="last_name">Last Name *</label>
+            <input type="text" id="last_name" name="last_name" required placeholder="Doe">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="date_of_birth">Date of Birth</label>
+          <input type="date" id="date_of_birth" name="date_of_birth">
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Account Information</h3>
+        <div class="form-group">
+          <label for="email">Email Address *</label>
+          <input type="email" id="email" name="email" required placeholder="john.doe@ltc.com">
+        </div>
+        <div class="form-group">
+          <label for="password">Password *</label>
+          <input type="password" id="password" name="password" required placeholder="Enter password">
+          <p class="form-hint">Password must be at least 8 characters with uppercase, lowercase, digit, and special character.</p>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a href="/admin/employees" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Create Employee</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .page-header {
+    margin-bottom: 40px;
+  }
+
+  .breadcrumb-link {
+    display: inline-block;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-decoration: none;
+    transition: .2s ease;
+  }
+
+  .breadcrumb-link:hover {
+    color: var(--accent-dark);
+  }
+
+  .page-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .page-header .muted {
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .form-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    padding: 40px;
+    max-width: 600px;
+  }
+
+  .form-section {
+    margin-bottom: 32px;
+  }
+
+  .form-section h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: 14px;
+    background: #fff;
+    transition: border-color .2s ease;
+    box-sizing: border-box;
+  }
+
+  .form-group input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0, 160, 220, 0.1);
+  }
+
+  .form-hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all .2s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-dark);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: white;
+    color: var(--text);
+    border: 1px solid var(--line);
+  }
+
+  .btn-secondary:hover {
+    background: var(--bg);
+    border-color: var(--muted);
+  }
+
+  @media (max-width: 768px) {
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+
+    .form-card {
+      padding: 24px;
+    }
+  }
+</style>
+{% endblock %}

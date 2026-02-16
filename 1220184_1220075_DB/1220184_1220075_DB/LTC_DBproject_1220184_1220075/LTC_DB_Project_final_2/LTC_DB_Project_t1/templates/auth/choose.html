@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Account{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="account-shell">
+      <div class="account-badge">Account</div>
+      <h1 class="account-title">Welcome back</h1>
+      <p class="account-sub">Login or create a new account to start shopping.</p>
+
+      <div class="account-actions">
+        <a class="btn btn-primary" href="{{ url_for('user.login') }}">Login</a>
+        <a class="btn btn-ghost" href="{{ url_for('user.signup') }}">Sign Up</a>
+      </div>
+
+      <div class="account-hint">
+        <span class="dot"></span>
+        Employees will be redirected to the employee dashboard automatically.
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

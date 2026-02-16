@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Warehouses | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>Warehouses</h2>
+      <p>Manage warehouse inventory and stock levels</p>
+    </div>
+
+    <div style="margin-bottom: 24px;">
+      <form method="POST" action="{{ url_for('warehouse.warehouses_ui_create') }}" style="display: inline-block;">
+        <button type="submit" class="btn btn-primary">+ Create New Warehouse</button>
+      </form>
+    </div>
+
+    {% if warehouses %}
+    <div class="grid-3">
+      {% for warehouse in warehouses %}
+      <div class="card warehouse-card">
+        <div class="warehouse-header">
+          <h3 class="warehouse-title">Warehouse #{{ warehouse.warehouse_id }}</h3>
+        </div>
+        <div class="warehouse-stats">
+          <div class="stat-item">
+            <span class="stat-label">Products</span>
+            <span class="stat-value">{{ warehouse.product_count or 0 }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Total Stock</span>
+            <span class="stat-value">{{ warehouse.total_quantity or 0 }}</span>
+          </div>
+        </div>
+        <div class="warehouse-actions">
+          <a href="{{ url_for('warehouse.warehouse_products_ui', warehouse_id=warehouse.warehouse_id) }}" 
+             class="btn btn-secondary">Manage Products</a>
+          <form method="POST" 
+                action="{{ url_for('warehouse.warehouses_ui_delete', warehouse_id=warehouse.warehouse_id) }}"
+                style="display: inline-block; margin-left: 8px;"
+                onsubmit="return confirm('Delete warehouse #{{ warehouse.warehouse_id }}? This will remove all products from this warehouse.');">
+            <button type="submit" class="btn btn-danger">Delete</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <p>No warehouses found. Create your first warehouse to get started.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}
+

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Edit Category | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <h2>Edit Category</h2>
+        <p>Update category information</p>
+      </div>
+    </div>
+
+    <div class="card" style="max-width: 600px;">
+      <form method="POST" class="auth-form">
+        <div class="field">
+          <label for="category_name">Category Name *</label>
+          <input type="text" id="category_name" name="category_name" 
+                 value="{{ category.category_name }}" required>
+        </div>
+
+        <div class="field">
+          <label for="category_description">Description</label>
+          <textarea id="category_description" name="category_description" 
+                    rows="4"
+                    style="width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(0,0,0,.10); background: rgba(255,255,255,.9); outline: none; font-size: 14px; transition: .2s ease; font-family: inherit;">{{ category.category_description or '' }}</textarea>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 20px;">
+          <button type="submit" class="btn btn-primary btn-block">Update Category</button>
+          <a class="btn btn-secondary btn-block" href="{{ url_for('category.categories_ui') }}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+

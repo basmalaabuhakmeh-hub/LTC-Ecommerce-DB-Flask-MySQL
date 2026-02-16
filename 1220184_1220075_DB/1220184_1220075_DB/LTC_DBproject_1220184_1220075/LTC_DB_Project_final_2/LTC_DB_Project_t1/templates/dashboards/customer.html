@@ -1,0 +1,522 @@
+{% extends "base.html" %}
+{% block title %}Customer Dashboard | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="dashboard-section">
+  <div class="container">
+    <!-- Welcome Header -->
+    <div class="dashboard-header">
+      <div class="dashboard-welcome">
+        <div class="welcome-avatar">{{ session.get('user_name', 'C')[0] }}</div>
+        <div>
+          <h1 class="dashboard-title">Welcome back, {{ session.get('user_name', 'Customer') }}!</h1>
+          <p class="dashboard-subtitle">Here's what's happening with your account today.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="customer-stats-grid">
+      <div class="customer-stat-card">
+        <div class="customer-stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+        </div>
+        <div class="customer-stat-info">
+          <div class="customer-stat-value">{{ orders_summary.total_orders or 0 }}</div>
+          <div class="customer-stat-label">Total Orders</div>
+        </div>
+      </div>
+
+      <div class="customer-stat-card">
+        <div class="customer-stat-icon customer-stat-icon-green">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div class="customer-stat-info">
+          <div class="customer-stat-value">{{ "%.0f"|format(orders_summary.total_spent or 0) }} ILS</div>
+          <div class="customer-stat-label">Total Spent</div>
+        </div>
+      </div>
+
+      <div class="customer-stat-card">
+        <div class="customer-stat-icon customer-stat-icon-orange">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="3" width="15" height="13"/>
+            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+            <circle cx="5.5" cy="18.5" r="2.5"/>
+            <circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+        </div>
+        <div class="customer-stat-info">
+          <div class="customer-stat-value">{{ orders_summary.status_counts.get('Pending', 0) + orders_summary.status_counts.get('Processing', 0) + orders_summary.status_counts.get('Shipped', 0) }}</div>
+          <div class="customer-stat-label">In Progress</div>
+        </div>
+      </div>
+
+      <div class="customer-stat-card">
+        <div class="customer-stat-icon customer-stat-icon-purple">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <div class="customer-stat-info">
+          <div class="customer-stat-value">{{ orders_summary.status_counts.get('Delivered', 0) + orders_summary.status_counts.get('Completed', 0) }}</div>
+          <div class="customer-stat-label">Delivered</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <h2 class="section-title-small">Quick Actions</h2>
+    <div class="action-grid">
+      <a href="{{ url_for('product.products_shop') }}" class="action-card">
+        <div class="action-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+          </svg>
+        </div>
+        <div class="action-title">Shop Products</div>
+        <div class="action-desc">Browse our catalog of electronics</div>
+      </a>
+
+      <a href="{{ url_for('order.my_orders') }}" class="action-card">
+        <div class="action-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+        </div>
+        <div class="action-title">My Orders</div>
+        <div class="action-desc">Track and view order history</div>
+      </a>
+
+      <a href="{{ url_for('user.profile_settings') }}" class="action-card">
+        <div class="action-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <div class="action-title">Profile Settings</div>
+        <div class="action-desc">Manage account details</div>
+      </a>
+
+      <a href="/categories/ui" class="action-card">
+        <div class="action-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+          </svg>
+        </div>
+        <div class="action-title">Categories</div>
+        <div class="action-desc">Browse by category</div>
+      </a>
+    </div>
+
+    <!-- Recent Orders & Spending Summary -->
+    <div class="dashboard-content-grid">
+      <!-- Recent Orders -->
+      <div class="dashboard-card">
+        <div class="dashboard-card-header">
+          <h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="1" y="3" width="15" height="13"/>
+              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+              <circle cx="5.5" cy="18.5" r="2.5"/>
+              <circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+            Recent Orders
+          </h3>
+          <a href="{{ url_for('order.my_orders') }}" class="view-all-link">View All</a>
+        </div>
+
+        {% if orders_summary.recent_orders %}
+        <div class="recent-orders-list">
+          {% for order in orders_summary.recent_orders %}
+          <a href="{{ url_for('order.order_details', order_id=order.order_id) }}" class="recent-order-item">
+            <div class="recent-order-info">
+              <div class="recent-order-id">Order #{{ order.order_id }}</div>
+              <div class="recent-order-date">{{ order.order_date }}</div>
+            </div>
+            <div class="recent-order-status status-{{ (order.delivery_status or 'pending')|lower|replace(' ', '-') }}">
+              {{ order.delivery_status or 'Pending' }}
+            </div>
+            <div class="recent-order-total">{{ "%.2f"|format(order.total_price) }} ILS</div>
+          </a>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state-small">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          <p>No orders yet</p>
+          <a href="{{ url_for('product.products_ui') }}" class="btn btn-small btn-primary">Start Shopping</a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Monthly Spending by Category -->
+      <div class="dashboard-card">
+        <div class="dashboard-card-header">
+          <h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+              <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+            </svg>
+            Monthly Spending
+          </h3>
+          <a href="{{ url_for('order.my_orders') }}" class="view-all-link">Details</a>
+        </div>
+
+        {% if spending_by_category %}
+        <div class="spending-list">
+          {% set total_spent = spending_by_category|sum(attribute='category_spent') %}
+          {% for cat in spending_by_category[:5] %}
+          <div class="spending-item">
+            <div class="spending-item-info">
+              <div class="spending-item-name">{{ cat.category_name }}</div>
+              <div class="spending-item-count">{{ cat.items_bought }} item{{ 's' if cat.items_bought != 1 else '' }}</div>
+            </div>
+            <div class="spending-item-amount">{{ "%.2f"|format(cat.category_spent) }} ILS</div>
+            <div class="spending-item-bar">
+              <div class="spending-item-bar-fill" style="width: {{ (cat.category_spent / total_spent * 100) if total_spent > 0 else 0 }}%"></div>
+            </div>
+          </div>
+          {% endfor %}
+
+          <div class="spending-total">
+            <span>This Month</span>
+            <span>{{ "%.2f"|format(total_spent) }} ILS</span>
+          </div>
+        </div>
+        {% else %}
+        <div class="empty-state-small">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
+            <path d="M22 12A10 10 0 0 0 12 2v10z"/>
+          </svg>
+          <p>No spending this month</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Featured Section -->
+    <div style="margin-top: 32px;">
+      <div class="cta-card">
+        <h3>Discover the Latest Tech</h3>
+        <p>Check out our newest arrivals and trending products</p>
+        <a href="{{ url_for('product.products_shop') }}" class="btn btn-primary">Browse Products</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .welcome-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 28px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .dashboard-welcome {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  /* Stats Grid */
+  .customer-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .customer-stat-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .customer-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(0,160,220,.1), rgba(0,160,220,.05));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .customer-stat-icon-green {
+    background: linear-gradient(135deg, rgba(16,185,129,.1), rgba(16,185,129,.05));
+    color: #10b981;
+  }
+
+  .customer-stat-icon-orange {
+    background: linear-gradient(135deg, rgba(245,158,11,.1), rgba(245,158,11,.05));
+    color: #f59e0b;
+  }
+
+  .customer-stat-icon-purple {
+    background: linear-gradient(135deg, rgba(139,92,246,.1), rgba(139,92,246,.05));
+    color: #8b5cf6;
+  }
+
+  .customer-stat-value {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--text);
+  }
+
+  .customer-stat-label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* Dashboard Content Grid */
+  .dashboard-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 32px;
+  }
+
+  .dashboard-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px;
+  }
+
+  .dashboard-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .dashboard-card-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .dashboard-card-header h3 svg {
+    color: var(--accent);
+  }
+
+  .view-all-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .view-all-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Recent Orders List */
+  .recent-orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .recent-order-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 16px;
+    align-items: center;
+    padding: 14px;
+    background: var(--bg-subtle, #f8fafc);
+    border-radius: 10px;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .recent-order-item:hover {
+    background: rgba(0,160,220,.05);
+  }
+
+  .recent-order-id {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .recent-order-date {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .recent-order-status {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: capitalize;
+  }
+
+  .status-pending, .status-processing {
+    background: rgba(245,158,11,.1);
+    color: #f59e0b;
+  }
+
+  .status-shipped, .status-in-transit {
+    background: rgba(59,130,246,.1);
+    color: #3b82f6;
+  }
+
+  .status-delivered, .status-completed {
+    background: rgba(16,185,129,.1);
+    color: #10b981;
+  }
+
+  .status-cancelled, .status-returned {
+    background: rgba(239,68,68,.1);
+    color: #ef4444;
+  }
+
+  .recent-order-total {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  /* Spending List */
+  .spending-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .spending-item {
+    display: grid;
+    gap: 6px;
+  }
+
+  .spending-item-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .spending-item-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .spending-item-count {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .spending-item-amount {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    text-align: right;
+  }
+
+  .spending-item-bar {
+    height: 6px;
+    background: var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .spending-item-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 3px;
+  }
+
+  .spending-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  /* Empty State Small */
+  .empty-state-small {
+    text-align: center;
+    padding: 32px 20px;
+    color: var(--muted);
+  }
+
+  .empty-state-small svg {
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+
+  .empty-state-small p {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 1024px) {
+    .customer-stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-content-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .dashboard-welcome {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .customer-stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .recent-order-item {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      text-align: center;
+    }
+  }
+</style>
+
+{% endblock %}

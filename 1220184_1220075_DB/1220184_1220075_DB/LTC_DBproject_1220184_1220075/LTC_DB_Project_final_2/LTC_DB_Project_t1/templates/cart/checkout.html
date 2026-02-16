@@ -1,0 +1,439 @@
+{% extends "base.html" %}
+{% block title %}Checkout | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="section checkout-section">
+  <div class="container">
+    <div class="section-head">
+      <h2>Checkout</h2>
+      <p>Review your order, enter delivery address and payment details</p>
+    </div>
+
+    <div class="checkout-container">
+      <!-- Order Summary -->
+      <div class="checkout-summary">
+        <div class="summary-card">
+          <h3>Order Summary</h3>
+          <div class="summary-items">
+            {% for item in cart['items'] %}
+            <div class="summary-item">
+              <div class="summary-item-info">
+                <span class="summary-item-name">{{ item.product_name }}</span>
+                <span class="summary-item-qty">Qty: {{ item.quantity }}</span>
+                {% if item.is_on_sale %}
+                <span class="summary-item-discount">{{ "%.0f"|format(item.discount_percentage) }}% OFF</span>
+                {% endif %}
+              </div>
+              <div class="summary-item-price">
+                {% if item.is_on_sale %}
+                <span class="summary-price-original">{{ "%.2f"|format(item.original_price * item.quantity) }} ILS</span>
+                <span class="summary-price-sale">{{ "%.2f"|format(item.subtotal) }} ILS</span>
+                {% else %}
+                <span>{{ "%.2f"|format(item.subtotal) }} ILS</span>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="summary-divider"></div>
+          <div class="summary-total">
+            <span>Total</span>
+            <span>{{ "%.2f"|format(cart['total']) }} ILS</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Checkout Form -->
+      <div class="checkout-form-container">
+        <form method="POST" action="{{ url_for('cart.checkout') }}" class="checkout-form">
+          <h3>Delivery Address</h3>
+          
+          <div class="form-group">
+            <label for="country">Country *</label>
+            <input type="text" id="country" name="country" required 
+                   placeholder="e.g., Palestine" value="{{ request.form.get('country', '') }}">
+          </div>
+
+          <div class="form-group">
+            <label for="city">City *</label>
+            <input type="text" id="city" name="city" required 
+                   placeholder="e.g., Ramallah" value="{{ request.form.get('city', '') }}">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="street_no">Street Number *</label>
+              <input type="number" id="street_no" name="street_no" required 
+                     placeholder="123" min="1" value="{{ request.form.get('street_no', '') }}">
+            </div>
+
+            <div class="form-group">
+              <label for="building">Building</label>
+              <input type="text" id="building" name="building" 
+                     placeholder="Building name" value="{{ request.form.get('building', '') }}">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="apartment_no">Apartment Number</label>
+            <input type="number" id="apartment_no" name="apartment_no" 
+                   placeholder="Apt 5" min="1" value="{{ request.form.get('apartment_no', '') }}">
+          </div>
+
+          <div class="form-divider"></div>
+
+          <h3 style="margin-top: 32px; margin-bottom: 24px;">Payment Information</h3>
+
+          <div class="form-group">
+            <label for="payment_method">Payment Method *</label>
+            <select id="payment_method" name="payment_method" required>
+              <option value="">Select payment method</option>
+              <option value="Credit Card" {{ 'selected' if request.form.get('payment_method') == 'Credit Card' else '' }}>Credit Card</option>
+              <option value="Debit Card" {{ 'selected' if request.form.get('payment_method') == 'Debit Card' else '' }}>Debit Card</option>
+              <option value="PayPal" {{ 'selected' if request.form.get('payment_method') == 'PayPal' else '' }}>PayPal</option>
+              <option value="Bank Transfer" {{ 'selected' if request.form.get('payment_method') == 'Bank Transfer' else '' }}>Bank Transfer</option>
+              <option value="Cash on Delivery" {{ 'selected' if request.form.get('payment_method') == 'Cash on Delivery' else '' }}>Cash on Delivery</option>
+            </select>
+          </div>
+
+          <div id="cardFields" style="display: none;">
+            <div class="form-group">
+              <label for="card_number">Card Number</label>
+              <input type="text" id="card_number" name="card_number" 
+                     placeholder="1234 5678 9012 3456" maxlength="19"
+                     value="{{ request.form.get('card_number', '') }}">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="card_expiry">Expiry Date</label>
+                <input type="text" id="card_expiry" name="card_expiry" 
+                       placeholder="MM/YY" maxlength="5"
+                       value="{{ request.form.get('card_expiry', '') }}">
+              </div>
+
+              <div class="form-group">
+                <label for="card_cvv">CVV</label>
+                <input type="text" id="card_cvv" name="card_cvv" 
+                       placeholder="123" maxlength="4"
+                       value="{{ request.form.get('card_cvv', '') }}">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="cardholder_name">Cardholder Name</label>
+              <input type="text" id="cardholder_name" name="cardholder_name" 
+                     placeholder="John Doe"
+                     value="{{ request.form.get('cardholder_name', '') }}">
+            </div>
+          </div>
+
+          <div class="payment-note">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+            <span>Your payment information is secure and encrypted</span>
+          </div>
+
+          <div class="checkout-actions">
+            <a href="{{ url_for('cart.view_cart') }}" class="btn btn-ghost">Back to Cart</a>
+            <button type="submit" class="btn btn-primary btn-large">Place Order</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .checkout-section {
+    padding: 32px 0;
+  }
+
+  .checkout-container {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 32px;
+    margin-top: 24px;
+  }
+
+  .summary-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 100px;
+  }
+
+  .summary-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+
+  .summary-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .summary-item:last-child {
+    border-bottom: none;
+  }
+
+  .summary-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .summary-item-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .summary-item-qty {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .summary-item-price {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  .summary-price-original {
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: line-through;
+    font-weight: 400;
+  }
+
+  .summary-price-sale {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e74c3c;
+  }
+
+  .summary-item-discount {
+    font-size: 11px;
+    font-weight: 600;
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  .summary-divider {
+    height: 1px;
+    background: var(--line);
+    margin: 16px 0;
+  }
+
+  .summary-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    padding-top: 12px;
+    border-top: 2px solid var(--line);
+  }
+
+  .checkout-form-container {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 32px;
+    box-shadow: var(--shadow);
+  }
+
+  .checkout-form h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: var(--text);
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+    transition: all .2s ease;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0, 160, 220, 0.1);
+  }
+
+  .form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+    transition: all .2s ease;
+    cursor: pointer;
+  }
+
+  .form-divider {
+    height: 1px;
+    background: var(--line);
+    margin: 32px 0;
+  }
+
+  .payment-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(0, 160, 220, 0.05);
+    border: 1px solid rgba(0, 160, 220, 0.2);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 20px;
+  }
+
+  .payment-note svg {
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .checkout-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+  }
+
+  .checkout-actions .btn {
+    flex: 1;
+  }
+
+  @media (max-width: 1024px) {
+    .checkout-container {
+      grid-template-columns: 1fr;
+    }
+
+    .summary-card {
+      position: static;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+
+    .checkout-actions {
+      flex-direction: column;
+    }
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const paymentMethod = document.getElementById('payment_method');
+  const cardFields = document.getElementById('cardFields');
+  
+  // Show/hide card fields based on payment method
+  function toggleCardFields() {
+    const method = paymentMethod.value;
+    if (method === 'Credit Card' || method === 'Debit Card') {
+      cardFields.style.display = 'block';
+    } else {
+      cardFields.style.display = 'none';
+    }
+  }
+  
+  paymentMethod.addEventListener('change', toggleCardFields);
+  
+  // Format card number input
+  const cardNumber = document.getElementById('card_number');
+  if (cardNumber) {
+    cardNumber.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+      let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+      e.target.value = formattedValue;
+    });
+  }
+  
+  // Format expiry date input
+  const cardExpiry = document.getElementById('card_expiry');
+  if (cardExpiry) {
+    cardExpiry.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, '');
+      if (value.length >= 2) {
+        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+      }
+      e.target.value = value;
+    });
+  }
+  
+  // Format CVV input (numbers only)
+  const cardCvv = document.getElementById('card_cvv');
+  if (cardCvv) {
+    cardCvv.addEventListener('input', function(e) {
+      e.target.value = e.target.value.replace(/\D/g, '');
+    });
+  }
+});
+</script>
+
+{% endblock %}
+

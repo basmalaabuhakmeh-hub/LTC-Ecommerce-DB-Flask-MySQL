@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Phone Numbers | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="section">
+  <div class="container">
+    <div class="dashboard-header">
+      <div>
+        <h1 class="dashboard-title">My Phone Numbers</h1>
+        <p class="dashboard-subtitle">Manage your phone numbers</p>
+      </div>
+      <a class="btn btn-secondary" href="{{ url_for('user.profile_settings') }}">← Back to Profile</a>
+    </div>
+
+    <div style="max-width: 700px; margin: 0 auto;">
+      <!-- Add New Phone Number -->
+      <div class="card" style="margin-bottom: 24px;">
+        <h2 style="margin-bottom: 20px; font-size: 22px; font-weight: 900;">Add Phone Number</h2>
+        
+        <form method="POST" action="{{ url_for('phone_number.phone_numbers_ui_add') }}" class="auth-form">
+          <div class="field">
+            <label for="phone_number">Phone Number *</label>
+            <input type="text" id="phone_number" name="phone_number" 
+                   placeholder="e.g., +970 599 123 456" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Add Phone Number</button>
+        </form>
+      </div>
+
+      <!-- Existing Phone Numbers -->
+      <div class="card">
+        <h2 style="margin-bottom: 20px; font-size: 22px; font-weight: 900;">Your Phone Numbers ({{ total }})</h2>
+        
+        {% if phone_numbers %}
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          {% for phone in phone_numbers %}
+          <div style="padding: 16px; border: 1px solid var(--line); border-radius: 8px;">
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <form method="POST" action="{{ url_for('phone_number.phone_numbers_ui_edit', number_id=phone.number_id) }}" 
+                    style="display: flex; gap: 12px; align-items: flex-start; flex: 1;">
+                <div style="flex: 1;">
+                  <input type="text" name="phone_number" value="{{ phone.phone_number }}" 
+                         style="width: 100%; padding: 8px 12px; border: 1px solid var(--line); border-radius: 4px; font-size: 16px;"
+                         required>
+                </div>
+                <button type="submit" class="btn btn-small btn-secondary">Update</button>
+              </form>
+              <form method="POST" action="{{ url_for('phone_number.phone_numbers_ui_delete', number_id=phone.number_id) }}" 
+                    style="display: inline;"
+                    onsubmit="return confirm('Delete this phone number?');">
+                <button type="submit" class="btn btn-small btn-danger">Delete</button>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <p>You don't have any phone numbers yet. Add one above to get started.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+

@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Manage Categories | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="section categories-manage">
+  <div class="container">
+    <!-- Page Header -->
+    <div class="section-head-flex">
+      <div>
+        <h2>Manage Categories</h2>
+        <p>Add, edit, and manage product categories</p>
+      </div>
+      <a href="{{ url_for('category.categories_ui_create') }}" class="btn btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add Category
+      </a>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="filter-bar">
+      <form method="GET" action="{{ url_for('category.categories_ui') }}" class="filter-form">
+        <div class="filter-search">
+          <svg class="filter-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <input type="text" name="q" placeholder="Search categories..." value="{{ q or '' }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+        {% if q %}
+        <a href="{{ url_for('category.categories_ui') }}" class="btn btn-ghost">Clear</a>
+        {% endif %}
+      </form>
+    </div>
+
+    <!-- Results Count -->
+    <div class="results-info">
+      <span>Showing <strong>{{ categories|length }}</strong> categor{{ 'ies' if categories|length != 1 else 'y' }}</span>
+      {% if q %}<span class="results-query">for "<strong>{{ q }}</strong>"</span>{% endif %}
+    </div>
+
+    {% if categories %}
+    <!-- Categories List (Wide vertical cards) -->
+    <div class="categories-list">
+      {% for cat in categories %}
+      <div class="category-card-wide manage-card">
+        <div class="category-card-header">
+          <div class="category-card-icon">
+            {{ cat.category_name[0] }}
+          </div>
+          <div class="category-card-info">
+            <h3 class="category-card-title">{{ cat.category_name }}</h3>
+            <p class="category-card-desc">{{ cat.category_description or 'No description provided' }}</p>
+            <div class="category-card-stats">
+              <span class="category-stat">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                  <line x1="7" y1="7" x2="7.01" y2="7"/>
+                </svg>
+                {{ cat.product_count }} Product{{ 's' if cat.product_count != 1 else '' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Management Actions -->
+          <div class="category-manage-actions">
+            <a href="{{ url_for('product.products_ui', category=cat.category_id) }}" class="btn btn-ghost btn-small">
+              View Products
+            </a>
+            <a href="{{ url_for('category.categories_ui_edit', category_id=cat.category_id) }}" class="btn btn-secondary btn-small">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              Edit
+            </a>
+            <form action="{{ url_for('category.categories_ui_delete', category_id=cat.category_id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this category? This will affect all products in this category.');">
+              <button type="submit" class="btn btn-danger btn-small">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+                Delete
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {% if cat.top_products %}
+        <div class="category-top-products">
+          <h4>Top Products</h4>
+          <div class="top-products-grid">
+            {% for p in cat.top_products %}
+            <div class="top-product-card">
+              <div class="top-product-image">
+                {% if p.primary_image %}
+                <img src="{{ p.primary_image }}" alt="{{ p.product_name }}" class="top-product-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <span class="top-product-initial" style="display:none;">{{ p.product_name[0] }}</span>
+                {% else %}
+                <span class="top-product-initial">{{ p.product_name[0] }}</span>
+                {% endif %}
+              </div>
+              <div class="top-product-info">
+                <div class="top-product-name">{{ p.product_name }}</div>
+                <div class="top-product-price">{{ "%.2f"|format(p.price) }} ILS</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <div class="category-no-products">
+          <p>No products in this category yet</p>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+          <line x1="7" y1="7" x2="7.01" y2="7"/>
+        </svg>
+      </div>
+      {% if q %}
+      <h3>No categories found</h3>
+      <p>No categories matching "{{ q }}". Try a different search term.</p>
+      <a href="{{ url_for('category.categories_ui') }}" class="btn btn-primary" style="margin-top: 20px;">View All Categories</a>
+      {% else %}
+      <h3>No categories yet</h3>
+      <p>Start by adding your first category</p>
+      <a href="{{ url_for('category.categories_ui_create') }}" class="btn btn-primary" style="margin-top: 20px;">Add Category</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

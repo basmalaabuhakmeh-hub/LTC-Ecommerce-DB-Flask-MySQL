@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+{% block title %}Edit Product | LTC Electronics{% endblock %}
+{% block content %}
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <h2>Edit Product</h2>
+        <p>Update product information and manage images</p>
+      </div>
+    </div>
+
+    <div class="edit-product-grid">
+      <!-- Product Info Card -->
+      <div class="card">
+        <h3 class="card-title">Product Information</h3>
+        <form method="POST" class="auth-form" enctype="multipart/form-data">
+          <div class="field">
+            <label for="product_name">Product Name *</label>
+            <input type="text" id="product_name" name="product_name"
+                   value="{{ product.product_name }}" required>
+          </div>
+
+          <div class="field">
+            <label for="price">Price (ILS) *</label>
+            <input type="number" id="price" name="price" step="0.01" min="0"
+                   value="{{ product.price }}" required>
+          </div>
+
+          <div class="field">
+            <label for="product_description">Description</label>
+            <textarea id="product_description" name="product_description" rows="3">{{ product.product_description or '' }}</textarea>
+          </div>
+
+          <div class="field">
+            <label for="category_id">Category *</label>
+            <select id="category_id" name="category_id" required>
+              {% for cat in categories %}
+              <option value="{{ cat.category_id }}"
+                      {{ 'selected' if cat.category_id == product.category_id }}>
+                {{ cat.category_name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+            <div class="field">
+              <label for="warranty_provider">Warranty Provider</label>
+              <input type="text" id="warranty_provider" name="warranty_provider"
+                     value="{{ product.warranty_provider or '' }}" placeholder="e.g., LTC Extended Care">
+            </div>
+
+            <div class="field">
+              <label for="warranty_months">Warranty (months)</label>
+              <input type="number" id="warranty_months" name="warranty_months" min="0" step="1"
+                     value="{{ product.warranty_months or '' }}" placeholder="e.g., 24">
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 20px;">
+            <button type="submit" class="btn btn-primary btn-block">Update Product</button>
+            <a class="btn btn-secondary btn-block" href="{{ url_for('product.products_ui') }}">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+      <!-- Product Images Card -->
+      <div class="card">
+        <h3 class="card-title">Product Images</h3>
+
+        <!-- Existing Images -->
+        {% if images %}
+        <div class="existing-images">
+          <label class="field-label">Current Images</label>
+          <div class="image-gallery">
+            {% for img in images %}
+            <div class="image-item {{ 'image-primary' if img.is_primary else '' }}" data-image-id="{{ img.image_id }}">
+              <img src="{{ img.image_url }}" alt="Product image">
+              <div class="image-actions">
+                {% if not img.is_primary %}
+                <form action="{{ url_for('product.set_primary_image_route', product_id=product.product_id, image_id=img.image_id) }}" method="POST" style="display:inline;">
+                  <button type="submit" class="img-action-btn" title="Set as primary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                  </button>
+                </form>
+                {% else %}
+                <span class="primary-badge">Primary</span>
+                {% endif %}
+                <form action="{{ url_for('product.delete_image_route', product_id=product.product_id, image_id=img.image_id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this image?');">
+                  <button type="submit" class="img-action-btn img-action-delete" title="Delete image">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                  </button>
+                </form>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <div class="no-images-message">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <p>No images uploaded yet</p>
+        </div>
+        {% endif %}
+
+        <!-- Add New Images -->
+        <div class="add-images-section">
+          <label class="field-label">Add New Images</label>
+          <form action="{{ url_for('product.add_images', product_id=product.product_id) }}" method="POST" enctype="multipart/form-data" class="upload-form">
+            <div class="upload-area" id="uploadArea">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <p>Drag & drop images here or <span class="upload-link">browse</span></p>
+              <p class="upload-hint">PNG, JPG, JPEG, GIF, WEBP (max 5MB each)</p>
+              <input type="file" name="new_images" id="newImages" multiple accept="image/*" class="file-input">
+            </div>
+            <div class="selected-files" id="selectedFiles"></div>
+            <div class="field" style="margin-top: 12px;">
+              <label class="checkbox-label">
+                <input type="checkbox" name="set_as_primary" value="1">
+                <span>Set first uploaded image as primary</span>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-top: 12px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Upload Images
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.edit-product-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 1000px;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.field-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.existing-images {
+  margin-bottom: 24px;
+}
+
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+}
+
+.image-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid var(--line);
+  transition: all 0.2s;
+}
+
+.image-item:hover {
+  border-color: var(--accent);
+}
+
+.image-item.image-primary {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(0,160,220,.2);
+}
+
+.image-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-actions {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,.7));
+  padding: 8px 6px 6px;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.image-item:hover .image-actions {
+  opacity: 1;
+}
+
+.img-action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.9);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  transition: all 0.2s;
+}
+
+.img-action-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.img-action-delete:hover {
+  background: #ef4444;
+}
+
+.primary-badge {
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--accent);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.no-images-message {
+  text-align: center;
+  padding: 32px;
+  color: var(--muted);
+  background: var(--bg-subtle, #f8fafc);
+  border-radius: 10px;
+  margin-bottom: 24px;
+}
+
+.no-images-message svg {
+  opacity: 0.5;
+  margin-bottom: 8px;
+}
+
+.no-images-message p {
+  font-size: 14px;
+}
+
+.add-images-section {
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.upload-area {
+  border: 2px dashed var(--line);
+  border-radius: 12px;
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.upload-area:hover, .upload-area.dragover {
+  border-color: var(--accent);
+  background: rgba(0,160,220,.03);
+}
+
+.upload-area svg {
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.upload-area p {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.upload-link {
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.upload-hint {
+  font-size: 12px !important;
+  margin-top: 6px !important;
+  opacity: 0.7;
+}
+
+.file-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.selected-files {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.selected-file {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--bg-subtle, #f8fafc);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.selected-file svg {
+  color: var(--accent);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+@media (max-width: 860px) {
+  .edit-product-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const uploadArea = document.getElementById('uploadArea');
+  const fileInput = document.getElementById('newImages');
+  const selectedFilesDiv = document.getElementById('selectedFiles');
+
+  // Drag and drop handling
+  uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+  });
+
+  uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+  });
+
+  uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    fileInput.files = e.dataTransfer.files;
+    updateSelectedFiles();
+  });
+
+  // File selection handling
+  fileInput.addEventListener('change', updateSelectedFiles);
+
+  function updateSelectedFiles() {
+    selectedFilesDiv.innerHTML = '';
+    const files = fileInput.files;
+
+    for (let i = 0; i < files.length; i++) {
+      const fileDiv = document.createElement('div');
+      fileDiv.className = 'selected-file';
+      fileDiv.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        ${files[i].name}
+      `;
+      selectedFilesDiv.appendChild(fileDiv);
+    }
+  }
+});
+</script>
+
+{% endblock %}
