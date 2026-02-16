@@ -71,6 +71,6 @@ E-commerce web application for **Light for Technology & Computer (LTC)**, a comp
 
 ## Reports
 
-- **Phase 1:** Scope, client, tech stack, entities/relations, full query list — **1220184_1220075_phase1_Database.pdf** (or .docx).
-- **Phase 2:** Refined design, relations, ER diagram — **1220184_1220075_phase2_Database.pdf** (or .docx).
+- **Phase 1:** Scope, client, tech stack, entities/relations, full query list — **1220184_1220075_phase1_Database.pdf** 
+- **Phase 2:** Refined design, relations, ER diagram — **1220184_1220075_phase2_Database.pdf**
 
